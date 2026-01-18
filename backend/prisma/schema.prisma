@@ -1,0 +1,105 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Lead {
+  id            String      @id @default(cuid())
+  name          String
+  email         String      @unique
+  phone         String?
+  company       String?
+  score         Int         // 1-100
+  status        String      // hot, warm, cold, contacted, won, lost
+  notes         String?
+  
+  calls         Call[]
+  emails        Email[]
+  interactions  Interaction[]
+  followUps     FollowUp[]
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Call {
+  id            String      @id @default(cuid())
+  leadId       String?
+  lead         Lead?       @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  
+  transcription String?
+  audioUrl      String
+  duration      Int?        // seconds
+  analysis      Json?       // Contains: intent, requirements, pain_points, suggested_email, etc.
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Email {
+  id            String      @id @default(cuid())
+  leadId       String?
+  lead         Lead?       @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  
+  fromEmail     String
+  toEmail       String?
+  subject       String
+  body          String
+  
+  isOutbound    Boolean     @default(false)
+  responseGenerated String?
+  suggestedResponse String?
+  
+  sentAt        DateTime?
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Interaction {
+  id            String      @id @default(cuid())
+  leadId        String
+  lead          Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  type          String      // call, email, note
+  content       String
+  intent        String?     // sales_inquiry, performance_query, tech_question, general
+  
+  extractedData Json?       // { requirements, pain_points, budget, timeline, decision_maker }
+  suggestedAction String?
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model FollowUp {
+  id            String      @id @default(cuid())
+  leadId        String
+  lead          Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  scheduledDate DateTime
+  actionType    String      // email, call, demo, meeting
+  status        String      // pending, completed, skipped
+  
+  notes         String?
+  
+  createdAt     DateTime    @default(now())
+  completedAt   DateTime?
+}
+
+model PromptTemplate {
+  id            String      @id @default(cuid())
+  name          String
+  category      String      // lead_qualification, intent_detection, email_generation, etc.
+  templateText  String
+  version       Int         @default(1)
+  isActive      Boolean     @default(true)
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
