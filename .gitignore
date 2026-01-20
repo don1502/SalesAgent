@@ -1,0 +1,23 @@
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+dist/
+build/
+.next/
+uploads/
+*.pyc
+__pycache__/
+.venv/
+venv/
+*.db
+*.sqlite
+
+# Docker files (optional, not used in this setup)
+docker-compose.yml
+Dockerfile
+backend/Dockerfile
+python-agent/Dockerfile
+frontend/Dockerfile
+
